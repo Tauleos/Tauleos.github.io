@@ -2,7 +2,7 @@
 </head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">HOME</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVES</a></li><li class="nav-list-item"><a href="/tags/" target="_self" class="nav-list-link">TAGS</a></li><li class="nav-list-item"><a href="https://github.com/Tauleos" target="_blank" class="nav-list-link">GITHUB</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">细说HTTP Cache</h1><div class="post-info">2019年5月7日</div><div class="post-content"><p><img src="/images/1557042361870.png" alt="headers"></p>
 <a id="more"></a>
 
-<p>在之前的文章<a href="https://tauleos.github.io/2019/04/12/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%BC%93%E5%AD%98%E7%90%86%E8%AE%BA/">浏览器缓存理论</a>中，我们详细解释了浏览器缓存的几种方式，其中的Disk Cache主要使用的便是HTTP协议中的缓存机制。浏览器会根据请求的结果和缓存标识，会判断是直接从缓存中读取数据还是向服务器发请求判断缓存的有效性，前者被称为<strong>强缓存</strong>，后者被称为<strong>协商缓存</strong>。</p>
+<p>在之前的文章<a href="https://tauleos.github.io/652b679860cc.html">浏览器缓存理论</a>中，我们详细解释了浏览器缓存的几种方式，其中的Disk Cache主要使用的便是HTTP协议中的缓存机制。浏览器会根据请求的结果和缓存标识，会判断是直接从缓存中读取数据还是向服务器发请求判断缓存的有效性，前者被称为<strong>强缓存</strong>，后者被称为<strong>协商缓存</strong>。</p>
 <h2 id="强缓存"><a href="#强缓存" class="headerlink" title="强缓存"></a>强缓存</h2><p>即不会向服务器发请求获取资源，直接在缓存中读取数据。在控制台中 HTTP status 为200,Size 显示from memory cache 或者 from disk cache;由两个http header 字段来控制：<strong>Expires和Cache-Control</strong>。</p>
 <h3 id="Expires"><a href="#Expires" class="headerlink" title="Expires"></a>Expires</h3><ul>
 <li>用来指定资源到期的时间,是一个具体的时间点。</li>
