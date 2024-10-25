@@ -1,0 +1,131 @@
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 自动化版本管理探索 · Leo's Blog</title><meta name="description" content="自动化版本管理探索 - Tauleos"><meta name="google-site-verification" content="y-sRxe2Toq8nFRU8PiEYywkdUoWdk_UYysZDKbnM7Ck"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="https://tauleos.github.io/atom.xml" title="Leo's Blog"><meta name="generator" content="Hexo 5.4.2"><link rel="alternate" href="/atom.xml" title="Leo's Blog" type="application/atom+xml">
+</head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">HOME</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVES</a></li><li class="nav-list-item"><a href="/tags/" target="_self" class="nav-list-link">TAGS</a></li><li class="nav-list-item"><a href="https://github.com/Tauleos" target="_blank" class="nav-list-link">GITHUB</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">自动化版本管理探索</h1><div class="post-info">2020年10月15日</div><div class="post-content"><p>在我们日常Coding过程中，经常会有开发类库的需求</p>
+<span id="more"></span>
+<p>开发完成发布之后，后续版本管理，更新日志等问题也随之而来，如何解决这些问题呢？</p>
+<h1 id="一、手打"><a href="#一、手打" class="headerlink" title="一、手打"></a>一、手打</h1><ul>
+<li>手动更改版本号</li>
+<li>手动变成更新日志</li>
+<li>手动发布到npm私服</li>
+<li>噢耶，完工</li>
+</ul>
+<div class="tip">
+你确定你是认真的么❓️❓️❓️手动黑人问号脸
+都2020年了还不能自动化吗？
+</div>
+
+<h1 id="二、自动化"><a href="#二、自动化" class="headerlink" title="二、自动化"></a>二、自动化</h1><p>回到正题，如果有一种工具，我们只需要简单输入命令行，轻轻敲一下回车，就可以轻松帮我们完成手动的那些工作，。我们只需要噢耶，岂不快哉。</p>
+<p>于是，在伟大的github上捕捉到了以下三种工具</p>
+<ul>
+<li>standard-version</li>
+<li>semantic-release</li>
+<li>lerna</li>
+</ul>
+<hr>
+<blockquote>
+<p>让我们来详细的分别了解一下这三位选手</p>
+</blockquote>
+<h2 id="1、Lerna"><a href="#1、Lerna" class="headerlink" title="1、Lerna"></a>1、Lerna</h2><p>不用说。先淘汰吧😂️。毕竟这家伙核心价值是多项目管理，跟我们的需求毫不沾边</p>
+<h2 id="2、standard-version"><a href="#2、standard-version" class="headerlink" title="2、standard-version"></a>2、standard-version</h2><p>根据介绍，它的核心价值观在于语义化版本控制、打tag以及CHANGELOG生成。更为加分的是它还是代码提交规范组织的官方出品<br><img src="/images/version-management/standard-version.png" alt="sv"></p>
+<blockquote>
+<p>A utility for versioning using semver and CHANGELOG generation powered by Conventional Commits. </p>
+</blockquote>
+<p>听上去蛮符合我们的要求，使用方法也简单</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">standard-version</span><br></pre></td></tr></table></figure>
+
+<p>基本上可以满足我们的日常需求。使用起来也满足我们的初始目标，一键Enter，搞定所有，我们只需要将更改推送到服务器，并且发布就好</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git push --follow-tags origin master &amp;&amp; npm publish</span><br></pre></td></tr></table></figure>
+<h2 id="3、semantic-release"><a href="#3、semantic-release" class="headerlink" title="3、semantic-release"></a>3、semantic-release</h2><p>打开文档介绍，原来这货的核心驱动力在于workflow。</p>
+<blockquote>
+<p>semantic-release automates the whole package release workflow including: determining the next version number, generating the release notes and publishing the package.</p>
+</blockquote>
+<p>相比楼上那位，该选手给我们提供了一整套完备的工作流，通过它我们可以:</p>
+<ul>
+<li>全自动release</li>
+<li>强制语义化说明</li>
+<li>插件化配置</li>
+<li>与CI/CD默认集成<br>剩下的还有好多。。。大家可以去官网看。。。</li>
+</ul>
+<p>使用方法<br>A、使用的话会稍微复杂一点，类似babel，需要在项目中增加一个 <strong>.releaserc</strong> 文件进行插件配置</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;branches&quot;</span>: <span class="string">&quot;master&quot;</span>,</span><br><span class="line">  <span class="comment">// &quot;debug&quot;: true,</span></span><br><span class="line">  <span class="comment">// &quot;dryRun&quot;: true, // semantic-release默认在ci中工作，如果需要调试可以打开这个开关</span></span><br><span class="line">  <span class="string">&quot;plugins&quot;</span>: [</span><br><span class="line">    <span class="string">&quot;@semantic-release/commit-analyzer&quot;</span>,</span><br><span class="line">    <span class="string">&quot;@semantic-release/release-notes-generator&quot;</span>,</span><br><span class="line">    <span class="string">&quot;@semantic-release/changelog&quot;</span>,</span><br><span class="line">    [</span><br><span class="line">      <span class="string">&quot;@semantic-release/npm&quot;</span>,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="string">&quot;npmPublish&quot;</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="string">&quot;tarballDir&quot;</span>: <span class="string">&quot;dist&quot;</span></span><br><span class="line">      &#125;</span><br><span class="line">    ],</span><br><span class="line">    [</span><br><span class="line">      <span class="string">&quot;@semantic-release/git&quot;</span>,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="string">&quot;assets&quot;</span>: [<span class="string">&quot;package.json&quot;</span>, <span class="string">&quot;CHANGELOG.md&quot;</span>],</span><br><span class="line">        <span class="string">&quot;message&quot;</span>: <span class="string">&quot;chore(蛋糕):$&#123;nextRelease.version&#125; [skip ci]\n\n$&#123;nextRelease.notes&#125;&quot;</span></span><br><span class="line">      &#125;</span><br><span class="line">    ],</span><br><span class="line">    [</span><br><span class="line">      <span class="string">&quot;@semantic-release/gitlab&quot;</span>,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="string">&quot;gitlabUrl&quot;</span>: <span class="string">&quot;https://git.com/&quot;</span>,</span><br><span class="line">        <span class="string">&quot;assets&quot;</span>: <span class="string">&quot;dist/*.tgz&quot;</span></span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">  ],</span><br><span class="line">  <span class="string">&quot;preset&quot;</span>: <span class="string">&quot;angular&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>B、同时需要在ci中增加配置，在项目中配置CI所需要的环境变量,包括<code>GL_TOKEN</code>、<code>NPM_USERNAME</code>、<code>NPM_EMAIL</code>、<code>NPM_PASSWORD</code>等</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">stages:</span></span><br><span class="line">  <span class="comment"># - test</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">release</span></span><br><span class="line"> </span><br><span class="line"><span class="attr">before_script:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">npm</span> <span class="string">install</span></span><br><span class="line"> </span><br><span class="line"><span class="attr">publish:</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">node:10</span></span><br><span class="line">  <span class="attr">stage:</span> <span class="string">release</span></span><br><span class="line">  <span class="attr">script:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&#x27;//registry.npm.org/:username=$&#123;NPM_USERNAME&#125;&#x27;</span><span class="string">&gt;&gt;.npmrc</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&#x27;//registry.npm.org/:email=$&#123;NPM_EMAIL&#125;&#x27;</span><span class="string">&gt;&gt;.npmrc</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">echo</span> <span class="string">&#x27;//registry.npm.org/:_password=$&#123;NPM_PASSWORD&#125;&#x27;</span><span class="string">&gt;&gt;.npmrc</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">npx</span> <span class="string">semantic-release</span></span><br></pre></td></tr></table></figure>
+<p>C、最重要的一点，需要在gitlab中开启<code>PersonalAccessToken</code>（<del>前提是开启2FA配置，照着步骤走，挺麻烦的也能走通</del>后来发现不用开启2FA也能走通，那可太棒了），并设置在CI/CD的变量中<br><img src="/images/version-management/pas.png" alt="pat"></p>
+<p>D、上述步骤做好，便可以把所有改动推送到远程仓库，坐等它带给你的惊喜</p>
+<div class="tip">哈哈，其实除了跟楼上一样的效果之外，还额外生成了gitLab中的Release。当然如果不需要的话也可以干掉它，不过这么专业的操作，为啥不保留呢，对不对~😄️</div>
+
+<h2 id="4、standard-version-VS-semantiv-release"><a href="#4、standard-version-VS-semantiv-release" class="headerlink" title="4、standard-version VS semantiv-release"></a>4、standard-version VS semantiv-release</h2><table>
+<thead>
+<tr>
+<th align="center">功能点</th>
+<th align="center">standard-version</th>
+<th align="center">semantic-release</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">版本控制</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">会根据提交的信息类型来自动更改对应的版本号,如下:<br> feat: 次版本(minor)+1 <br>  fix: 修订号(patch) +1 <br> BREAK CHANGE: 主板号(marjor) +1</td>
+</tr>
+<tr>
+<td align="center">CHANGELOG</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">均基于Angular Commit 规则</td>
+</tr>
+<tr>
+<td align="center">gitTag标记</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">npm自动发布</td>
+<td align="center"></td>
+<td align="center">✅</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">CI集成</td>
+<td align="center">⚠️️</td>
+<td align="center">✅</td>
+<td align="center">standard-version 可以手动实现</td>
+</tr>
+<tr>
+<td align="center">pre-release实现</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">standard-version：通过可选参数<br>semantic-release:通过分支设置</td>
+</tr>
+<tr>
+<td align="center">gitlab release</td>
+<td align="center"></td>
+<td align="center">✅</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<h1 id="三、结论"><a href="#三、结论" class="headerlink" title="三、结论"></a>三、结论</h1><p>standard-version与semantic-release 都是令人惊叹的工具，不管使用哪一个都能够最大限度的满足我们的需求。当然两个工具的侧重点是不一样的。所以我们可以根据自己的喜好来选择。<br>在我个人看来：</p>
+<div class="tip">
+standard-version 偏向于小工具开发，自行决定类库的版本，并且可以在发布前进行修改
+semantic-release 偏向于workflow，多人协作下通过mr进行需求的迭代
+</div>
+当然，无论采取哪种姿势，我们的核心目标只有一个：
+
+<p><img src="/images/version-management/dkam.png" alt="killAllHumans"><br>完~</p>
+</div></article></div></main><footer><div class="paginator"><a href="/6aef7f739395.html" class="prev">上一篇</a><a href="/fa64e05e0810.html" class="next">下一篇</a></div><div id="gitalk-container"></div><script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js" async></script><script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.10.0/js/md5.min.js" async></script><script>var ds = document.createElement('link');
+ds.rel = 'stylesheet';ds.async = true;
+ds.href = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ds);
+window.onload = function() {
+  var gitalk = new Gitalk({
+    clientID: '62e01f3aa3f140c5af8a',
+    clientSecret: '8f02698609ba488706c5e67839f0bbf46861554f',
+    repo: 'Tauleos.github.io',
+    owner: 'Tauleos',
+    admin: ['Tauleos'],
+    id: md5(window.location.pathname),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+  gitalk.render('gitalk-container');
+}</script><div class="copyright"><p id="host_by"><span id="busuanzi_container_site_pv">&nbsp;本站总访问量 &nbsp;<span id="busuanzi_value_site_pv"><i class="fa fa-spinner"></i></span> 次,</span><span id="busanzi_container_site_uv">&nbsp;本站总访问人数 &nbsp;<span id="busuanzi_value_site_uv"><i class="fa fa-spinner"></i></span> 次.</span></p><p>© 2017 - 2024 created by <a href="https://tauleos.github.io">Tauleos</a>,Looking for better life and peace.</p><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script></div></footer></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":true},"react":{"opacity":0.7}});</script></body></html>
