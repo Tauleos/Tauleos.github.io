@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 如何解决微前端中的路由跳转坑 · Leo's Blog</title><meta name="description" content="如何解决微前端中的路由跳转坑 - Tauleos"><meta name="google-site-verification" content="y-sRxe2Toq8nFRU8PiEYywkdUoWdk_UYysZDKbnM7Ck"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="https://tauleos.github.io/atom.xml" title="Leo's Blog"><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="Leo's Blog" type="application/atom+xml">
+</head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">HOME</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVES</a></li><li class="nav-list-item"><a href="/tags/" target="_self" class="nav-list-link">TAGS</a></li><li class="nav-list-item"><a href="https://github.com/Tauleos" target="_blank" class="nav-list-link">GITHUB</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">如何解决微前端中的路由跳转坑</h1><div class="post-info">2022年3月10日</div><div class="post-content"><h2 id="事件背景"><a href="#事件背景" class="headerlink" title="事件背景"></a>事件背景</h2><blockquote>
+<p>商家工作台目前已经使用<a target="_blank" rel="noopener" href="https://qiankun.umijs.org/">qiankun</a> 改造成微前端体系，微前端的好处不用我赘述，大家懂的都懂，因此在有品二清项目开发时也以微前端的方式进行接入。在送测过程中，测试同学反馈在点击浏览器回退的时候会页面空白，我一脸蒙圈的试了好几次却没复现，最终在服务端同学跟测试同学的大力配合下，找到了稳定复现的场景。</p>
+</blockquote>
+<h2 id="问题定位"><a href="#问题定位" class="headerlink" title="问题定位"></a>问题定位</h2><blockquote>
+<p>When you have eliminated the impossibles,whatever remains,however improbable,must be the truth.     – 福尔摩斯</p>
+</blockquote>
+<div class='tip'>
+为什么会出现这个问题呢？
+<p style="text-indent:20em;">原因未知，需要继续拆解</p>
+以前接入过的子应用有遇到过这种问题呢？
+<p style="text-indent:20em;">就我所知没有</p>
+好的，为什么以前的子应用没有遇到过呢？
+<p style="text-indent:20em;">因为以前的子应用跟主应用都是vue2的router</p>
+那就是说可能是新旧Router导致的咯？  
+<p style="text-indent:20em;">有可能哦~问问其他子应用呢</p>
+.....问过了，人家是好的
+<p style="text-indent:20em;">      ？？？？.....再报再探！</p>
+</div>
+
+<hr>
+<p>以上是遇到问题时混乱的大脑的疑点闪现过程。从中我们不难找出导致问题的大致范围：<strong>主应用的Router版本与子应用的Router版本不一致</strong>，当然，中间还存在几个疑点，需要继续拨开迷雾。</p>
+<ol>
+<li>实现原理有什么差异会导致这个问题。</li>
+<li>其他<code>Vue3</code>项目为啥没遇到这个问题。</li>
+</ol>
+<p>带着以上问题，我们开始进入漫长的断点debug 与翻源码过程。</p>
+<h2 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h2><blockquote>
+<p>真実はいつもひとつ</p>
+</blockquote>
+<h3 id="1-实现原理的差异"><a href="#1-实现原理的差异" class="headerlink" title="1. 实现原理的差异"></a>1. 实现原理的差异</h3><p>首先，让我们来分析一波新旧版本的 <code>Router</code> 到底更改了什么。<br>我们在新版本<code>Router</code>文档中找到这么一段说明。<br><img src="/images/qiankun-router/history-state.png" alt="history.state"></p>
+<p>稍后我们会在源码中找到对应的操作<code>state</code>的具体位置<br>而旧版本的<code>Router</code>使用的<code>pushState</code>，则只在<code>state</code>中存储了key这唯一一个属性。(<code>vue-router/src/util/push-state.js</code>)<br><img src="/images/qiankun-router/pushState.png" alt="history.state"></p>
+<div class="tip">
+也就是说，<code>history.state</code> 在新旧版本的<code>Router</code>中的数据结构是不一致的。
+</div>
+
+<p>我猜这应该是导致改问题的<strong>核心因素</strong>了。我们接着往下验证</p>
+<h3 id="2-undefined-的由来"><a href="#2-undefined-的由来" class="headerlink" title="2. undefined 的由来"></a>2. undefined 的由来</h3><ol>
+<li><p>主应用在点击左侧菜单的时候，会触发<code>pushState</code>,从而激活子应用，进入子应用对应的菜单中。<br><img src="/images/qiankun-router/main-pushState.png" alt="history.state"></p>
+</li>
+<li><p>子应用在第一次进入的时候，会执行<code>changeLocation</code>的<code>replace</code>操作，此时页面进入子应用内。</p>
+</li>
+<li><p>子应用内部页面跳转时，所有的路由均由子应用<code>Router</code>进行接管。此时一切正常。</p>
+</li>
+<li><p>再次点击主应用左侧菜单时，执行以下代码<strong>将 history.state 置为空对象。</strong>同时，页面跳转到对应路由页面。</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line">history.<span class="title function_">pushState</span>(&#123;&#125;, <span class="string">&#x27;&#x27;</span>, jumpUrl)</span><br></pre></td></tr></table></figure></li>
+<li><p>继续在子应用内部跳转路由时，如下图所示，当执行到 <code>push(vue-router/history/html5.ts)</code> 的时候，由于此时 <code>history.state</code> 已经变成了空对象，所以图中的 <code>currentState.current</code> 就变成了<code>undefined</code>。</p>
+<blockquote>
+<p>在265行会先调用一次<code>changeLocation</code>用来记录当前路由信息(中间状态)</p>
+</blockquote>
+</li>
+</ol>
+<p><img src="/images/qiankun-router/push.png" alt="history.state"></p>
+<ol start="6">
+<li>而进入到 <code>changeLocation</code> 方法内部，此时的 <code>to</code> 已经变成了<code>undefined</code>，也因此拼装的 <code>url</code> 中会出现<code>undefined</code>。<br><img src="/images/qiankun-router/changelocation.png" alt="history.state"></li>
+<li>由于第六步中执行的是中间态的记录当前路由行为，后续还会继续跳转真实的目的地路由，所以中间态的<code>undefined</code>被保存在了浏览器的路由栈中。当触发回退的时候，就跳到了<code>url</code>中带有<code>undefined</code>resole的空白页面。</li>
+<li>现在，案情真相大白了。</li>
+</ol>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p><img src="/images/qiankun-router/resolve.png" alt="history.state"></p>
+<p>一劳永逸的方案则是：主应用与子应用均使用同一个版本的 <code>VueRouter</code>,当然，也要从实际出发，综合考虑各项改动的<code>ROI</code>，从而采用更合理的方案。</p>
+<h2 id="One-More-Thing"><a href="#One-More-Thing" class="headerlink" title="One More Thing!"></a>One More Thing!</h2><div class="tip">
+为什么其他使用新Router的子应用没有遇到同样的问题？
+</div>
+我盲猜是因为 其他子应用要么只有一个主应用的菜单，要么子应用之间的菜单比较独立，所以没有遇到。实际上，这应该是个必现的场景。
+</div></article></div></main><footer><div class="paginator"><a href="/f559cd027a92.html" class="prev">上一篇</a><a href="/58bedbf90157.html" class="next">下一篇</a></div><div id="gitalk-container"></div><script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js" async></script><script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.10.0/js/md5.min.js" async></script><script>var ds = document.createElement('link');
+ds.rel = 'stylesheet';ds.async = true;
+ds.href = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ds);
+window.onload = function() {
+  var gitalk = new Gitalk({
+    clientID: '62e01f3aa3f140c5af8a',
+    clientSecret: '8f02698609ba488706c5e67839f0bbf46861554f',
+    repo: 'Tauleos.github.io',
+    owner: 'Tauleos',
+    admin: ['Tauleos'],
+    id: md5(window.location.pathname),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+  gitalk.render('gitalk-container');
+}</script><div class="copyright"><p id="host_by"><span id="busuanzi_container_site_pv">&nbsp;本站总访问量 &nbsp;<span id="busuanzi_value_site_pv"><i class="fa fa-spinner"></i></span> 次,</span><span id="busanzi_container_site_uv">&nbsp;本站总访问人数 &nbsp;<span id="busuanzi_value_site_uv"><i class="fa fa-spinner"></i></span> 次.</span></p><p>© 2017 - 2024 created by <a href="https://tauleos.github.io">Tauleos</a>,Looking for better life and peace.</p><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script></div></footer></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":true},"react":{"opacity":0.7}});</script></body></html>
